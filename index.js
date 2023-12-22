@@ -9,7 +9,7 @@ const port = process.env.port || 5000;
 // middleware
 app.use(
   cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://dnd-task-management.web.app/'],
     credentials: true,
     methods: ['GET', 'POST', 'UPDATE', 'PUT', 'DELETE'],
   })
@@ -71,6 +71,57 @@ async function run() {
         res
           .status(500)
           .send({ success: false, message: 'Failed to Add the Task' });
+      }
+    });
+
+    // get all task by user id
+    app.get('/all-tasks', async (req, res) => {
+      try {
+        const result = await taskCollection.find().toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, message: 'Failed to Get all task by id' });
+      }
+    });
+    // get all task by user id
+    app.get('/all-tasks/:userId', async (req, res) => {
+      try {
+        const userId = req.params.userId;
+        const query = { taskOf: userId };
+        const result = await taskCollection.find(query).toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, message: 'Failed to Get all task by id' });
+      }
+    });
+
+    // update task by id
+    app.put('/update-task/:taskId', async (req, res) => {
+      try {
+        const taskId = req.params.taskId;
+        console.log(taskId);
+        const query = {
+          _id: new ObjectId(taskId),
+        };
+        const options = { upsert: true };
+        const updatedTask = req.body;
+        console.log(updatedTask);
+        const task = {
+          $set: { ...updatedTask },
+        };
+        const result = await taskCollection.updateOne(query, task, options);
+        res.status(201).send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, message: 'Failed to update task by id' });
       }
     });
 
