@@ -9,18 +9,15 @@ const port = process.env.port || 5000;
 // middleware
 app.use(
   cors({
-    origin: 'https://ratemy-project.web.app',
+    origin: ['http://localhost:5173'],
     credentials: true,
     methods: ['GET', 'POST', 'UPDATE', 'PUT', 'DELETE'],
   })
 );
 app.use(express.json());
 
-
-
-
 app.get('/', (req, res) => {
-  res.send('Assignment Data Will Add Soon');
+  res.send('Task Data Will Add Soon');
 });
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.clucrnq.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -38,8 +35,44 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const database = client.db('RateMyProjectDB');
+    const database = client.db('TaskManagementDB');
     const taskCollection = database.collection('taskCollection');
+
+    // (new) generate token on authentication
+    app.post('/jwt', async (req, res) => {
+      try {
+        const user = req.body;
+        console.log('User id : ', user);
+        const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+          expiresIn: '30d',
+        });
+        res.send({
+          status: true,
+          message: 'Token Created Successfully',
+        });
+      } catch (error) {
+        res.send({
+          status: true,
+          error: error.message,
+        });
+      }
+    });
+
+    // add new task
+    app.post('/add-task', async (req, res) => {
+      try {
+        const task = req.body;
+        const result = await taskCollection.insertOne(task);
+        res
+          .status(201)
+          .send({ success: true, message: 'Task Added Successfully' });
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, message: 'Failed to Add the Task' });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 });
