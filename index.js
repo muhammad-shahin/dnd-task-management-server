@@ -9,7 +9,7 @@ const port = process.env.port || 5000;
 // middleware
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://dnd-task-management.web.app/'],
+    origin: 'https://dnd-task-management.web.app',
     credentials: true,
     methods: ['GET', 'POST', 'UPDATE', 'PUT', 'DELETE'],
   })
